@@ -1,0 +1,20 @@
+{
+  "name": "grid-scanner",
+  "version": "1.0.0",
+  "description": "Local Google Maps grid rank scanner with ad-spend and website audit for local service businesses",
+  "main": "server.js",
+  "type": "commonjs",
+  "scripts": {
+    "start": "node server.js",
+    "demo": "DEMO_MODE=true APP_PASSWORD=demo node server.js",
+    "test": "node --test test/*.test.js"
+  },
+  "engines": {
+    "node": ">=18"
+  },
+  "dependencies": {
+    "cheerio": "1.0.0",
+    "express": "4.21.2",
+    "leaflet": "1.9.4"
+  }
+}

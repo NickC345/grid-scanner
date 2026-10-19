@@ -1,0 +1,147 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+<title>Grid Scanner</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Barlow+Semi+Condensed:wght@500;600&family=JetBrains+Mono:wght@500;700&family=Public+Sans:wght@400;600;700&display=swap">
+<link rel="stylesheet" href="/vendor/leaflet/leaflet.css">
+<link rel="stylesheet" href="/styles.css">
+</head>
+<body>
+<header class="topbar">
+  <div class="brand"><div class="brand-mark" aria-hidden="true"><i></i><i></i><i></i><i></i><i></i><i></i><i></i><i></i><i></i></div><h1>Grid Scanner</h1></div>
+  <div class="top-actions">
+    <button class="btn ghost" id="historyBtn" type="button">Past scans</button>
+    <form method="post" action="/logout"><button class="btn ghost" type="submit">Sign out</button></form>
+  </div>
+</header>
+<div class="demo-banner" id="demoBanner" hidden>Demo mode: every result below is made-up sample data. Add your DataForSEO login to run real scans.</div>
+
+<main class="layout">
+  <aside class="rail">
+    <section class="panel step" id="step1">
+      <div class="step-head"><span class="step-num">01</span><h3>Find the business</h3></div>
+      <form id="locateForm" class="step">
+        <div class="field"><label for="name">Company name</label><input id="name" type="text" required placeholder="e.g. Cool Breeze Heating & Air" autocomplete="off"></div>
+        <div class="field"><label for="address">Address</label><input id="address" type="text" required placeholder="Street, city, state" autocomplete="off"></div>
+        <button class="btn primary block" id="locateBtn" type="submit">Find on Google Maps</button>
+        <p class="error" id="locateErr" hidden></p>
+      </form>
+      <div class="candidates" id="candidates" hidden></div>
+    </section>
+
+    <section class="panel step" id="step2" hidden>
+      <div class="step-head"><span class="step-num">02</span><h3>Scan settings</h3></div>
+      <div class="field">
+        <label for="keywords">Keywords (one per line)</label>
+        <textarea id="keywords" spellcheck="false"></textarea>
+      </div>
+      <div class="field">
+        <label for="spacing">Distance between grid points</label>
+        <select id="spacing">
+          <option value="0.5">0.5 mile (4 × 5 mi area)</option>
+          <option value="1" selected>1 mile (8 × 10 mi area)</option>
+          <option value="2">2 miles (16 × 20 mi area)</option>
+        </select>
+      </div>
+      <div class="field">
+        <label for="website">Website (optional override)</label>
+        <input id="website" type="url" placeholder="Uses the site on their Google profile">
+      </div>
+      <label class="check"><input type="checkbox" id="optAds" checked><span>Check Google Search ads and Local Services Ads at 9 points per keyword</span></label>
+      <label class="check"><input type="checkbox" id="optSpend" checked><span>Look up ad history and estimated monthly spend</span></label>
+      <div class="cost-line"><span>Estimated DataForSEO cost</span><strong class="num" id="costEst">$0.00</strong></div>
+      <button class="btn primary block" id="scanBtn" type="button">Run 9 × 11 scan</button>
+      <p class="error" id="scanErr" hidden></p>
+    </section>
+
+    <section class="panel progress" id="progressPanel" hidden>
+      <div class="step-head"><span class="step-num">…</span><h3>Scanning</h3></div>
+      <div class="bar"><i id="progressBar"></i></div>
+      <div class="small muted" id="progressText">Starting</div>
+    </section>
+  </aside>
+
+  <section class="results" id="results">
+    <div class="panel empty" id="emptyState">
+      <div class="ghost-grid" aria-hidden="true" id="ghostGrid"></div>
+      <h2>Enter a company to see where it ranks</h2>
+      <p class="muted">The scan checks 99 points around the business on Google Maps, looks for their ads, estimates their ad spend and grades their website.</p>
+    </div>
+  </section>
+
+  <section class="results" id="historyView" hidden>
+    <div class="panel">
+      <div class="section-head"><h2>Past scans</h2><button class="btn" id="historyClose" type="button">Back</button></div>
+      <div class="history-list" id="historyList"></div>
+    </div>
+  </section>
+</main>
+
+<template id="resultTpl">
+  <div class="panel">
+    <div class="biz-head">
+      <div>
+        <div class="label" data-k="scanMeta"></div>
+        <h2 data-k="title"></h2>
+        <div class="biz-meta" data-k="meta"></div>
+      </div>
+      <div class="small muted num" data-k="cost"></div>
+    </div>
+  </div>
+  <div class="tiles" data-k="tiles"></div>
+
+  <div class="panel">
+    <div class="section-head"><h2>Google Maps rank grid</h2><div class="tabs" role="tablist" data-k="tabs"></div></div>
+    <div class="map-wrap">
+      <div>
+        <div id="map"></div>
+        <div class="stats-row" data-k="kwStats"></div>
+        <div class="legend">
+          <span><i style="background:var(--good)"></i>1–3</span>
+          <span><i style="background:var(--warn)"></i>4–10</span>
+          <span><i style="background:var(--hot)"></i>11–20</span>
+          <span><i style="background:var(--bad)"></i>Not in top 20</span>
+          <span><i style="background:var(--accent)"></i>$ = their sponsored Maps listing showed here</span>
+        </div>
+      </div>
+      <div>
+        <h3>Who beats them</h3>
+        <p class="small muted">Competitors ranking most often in the top 3 for this keyword.</p>
+        <div class="table-scroll"><table data-k="competitors"></table></div>
+      </div>
+    </div>
+  </div>
+
+  <div class="two-col">
+    <div class="panel">
+      <div class="section-head"><h2>Are they spending money?</h2><span data-k="spendPill"></span></div>
+      <ul class="evidence" data-k="evidence"></ul>
+      <div data-k="spendEst"></div>
+      <h3 style="margin-top:18px">Search ads by location</h3>
+      <p class="small muted">3 × 3 sample across the grid. <span class="pill good">L</span> Local Services Ad, numbers are their ad position.</p>
+      <div class="minigrids" data-k="minigrids"></div>
+      <h3 style="margin-top:18px">Advertisers seen</h3>
+      <div class="table-scroll"><table data-k="advertisers"></table></div>
+    </div>
+    <div class="panel">
+      <div class="section-head"><h2>Are they wasting it?</h2><span data-k="wastePill"></span></div>
+      <div data-k="wasteGauge"></div>
+      <ul class="reasons" data-k="reasons" style="margin-top:14px"></ul>
+      <div data-k="paidKw"></div>
+    </div>
+  </div>
+
+  <div class="panel">
+    <div class="section-head"><h2>Website check</h2><span data-k="sitePill"></span></div>
+    <div data-k="site"></div>
+  </div>
+  <div data-k="errors"></div>
+</template>
+
+<script src="/vendor/leaflet/leaflet.js"></script>
+<script src="/app.js"></script>
+</body>
+</html>

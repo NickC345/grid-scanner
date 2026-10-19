@@ -1,0 +1,23 @@
+services:
+  - type: web
+    name: grid-scanner
+    runtime: node
+    plan: starter
+    buildCommand: npm ci
+    startCommand: npm start
+    healthCheckPath: /healthz
+    envVars:
+      - key: APP_PASSWORD
+        sync: false
+      - key: DATAFORSEO_LOGIN
+        sync: false
+      - key: DATAFORSEO_PASSWORD
+        sync: false
+      - key: PAGESPEED_API_KEY
+        sync: false
+      - key: DATA_DIR
+        value: /var/data
+    disk:
+      name: scans
+      mountPath: /var/data
+      sizeGB: 1

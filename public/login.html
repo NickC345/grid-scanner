@@ -1,0 +1,32 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+<title>Grid Scanner</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Barlow+Semi+Condensed:wght@600&family=Public+Sans:wght@400;600&display=swap">
+<link rel="stylesheet" href="/login.css">
+</head>
+<body>
+<div class="login-wrap">
+  <form class="panel login-card" method="post" action="/login">
+    <div class="brand"><div class="brand-mark"><i></i><i></i><i></i><i></i><i></i><i></i><i></i><i></i><i></i></div><h1>Grid Scanner</h1></div>
+    <div class="field">
+      <label for="password">Password</label>
+      <input id="password" name="password" type="password" autocomplete="current-password" required autofocus>
+    </div>
+    <p class="error" id="err" hidden></p>
+    <button class="btn primary block" type="submit">Sign in</button>
+  </form>
+</div>
+<script>
+  const e = new URLSearchParams(location.search).get('e');
+  if (e) {
+    const el = document.getElementById('err');
+    el.textContent = e === 'locked' ? 'Too many attempts. Try again in 15 minutes.' : 'Wrong password. Try again.';
+    el.hidden = false;
+  }
+</script>
+</body>
+</html>
