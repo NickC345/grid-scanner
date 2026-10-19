@@ -2,7 +2,9 @@ services:
   - type: web
     name: grid-scanner
     runtime: node
-    plan: starter
+    # Free plan: sleeps when idle and scan history resets on each deploy.
+    # To keep history, change plan to "starter" and uncomment the disk block + DATA_DIR.
+    plan: free
     buildCommand: npm ci
     startCommand: npm start
     healthCheckPath: /healthz
@@ -15,9 +17,11 @@ services:
         sync: false
       - key: PAGESPEED_API_KEY
         sync: false
-      - key: DATA_DIR
-        value: /var/data
-    disk:
-      name: scans
-      mountPath: /var/data
-      sizeGB: 1
+      - key: DEMO_MODE
+        value: "false"
+      # - key: DATA_DIR
+      #   value: /var/data
+    # disk:
+    #   name: scans
+    #   mountPath: /var/data
+    #   sizeGB: 1

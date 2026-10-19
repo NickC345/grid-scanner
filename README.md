@@ -60,7 +60,9 @@ Demo mode uses obviously fake sample data and makes no API calls.
 3. Enter `APP_PASSWORD`, `DATAFORSEO_LOGIN`, `DATAFORSEO_PASSWORD` when asked.
 4. Open the `.onrender.com` URL and sign in with your password.
 
-`render.yaml` uses the $7/mo Starter plan with a 1 GB disk so scan history survives restarts. On the free plan, remove the `disk` block and `DATA_DIR`. It still works, but the app sleeps when idle and past scans are wiped on each deploy.
+`render.yaml` uses Render's **free plan**. The app sleeps when idle, so the first visit takes about 30 seconds, and past scans are wiped on each deploy. To keep scan history, switch to the $7/mo Starter plan: in `render.yaml`, set `plan: starter` and uncomment the `disk` block and `DATA_DIR`.
+
+To try the hosted app before you have a DataForSEO account, set `DEMO_MODE` to `true` in Render. The DataForSEO fields can then be left blank.
 
 The same app runs anywhere Node 18+ runs (Railway, Fly.io, a VPS) with the same environment variables.
 
