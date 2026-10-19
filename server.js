@@ -17,10 +17,11 @@ const { DemoClient, demoAudit } = require('./lib/demo');
 const { runScan, locate, estimateCost } = require('./lib/scan');
 
 const PORT = Number(process.env.PORT) || 3000;
-const DEMO = /^(1|true|yes)$/i.test(process.env.DEMO_MODE || '');
-const APP_PASSWORD = process.env.APP_PASSWORD || '';
-const DFS_LOGIN = process.env.DATAFORSEO_LOGIN || '';
-const DFS_PASSWORD = process.env.DATAFORSEO_PASSWORD || '';
+const APP_PASSWORD = (process.env.APP_PASSWORD || '').trim();
+const DFS_LOGIN = (process.env.DATAFORSEO_LOGIN || '').trim();
+const DFS_PASSWORD = (process.env.DATAFORSEO_PASSWORD || '').trim();
+// Without DataForSEO credentials the app runs on sample data instead of refusing to start.
+const DEMO = /^(1|true|yes)$/i.test(process.env.DEMO_MODE || '') || !DFS_LOGIN || !DFS_PASSWORD;
 const PAGESPEED_KEY = process.env.PAGESPEED_API_KEY || '';
 const DATA_DIR = process.env.DATA_DIR || path.join(__dirname, 'data');
 const SCAN_DIR = path.join(DATA_DIR, 'scans');
@@ -28,15 +29,25 @@ const MAX_CONCURRENT_SCANS = 2;
 
 const DEFAULT_KEYWORDS = ['ac repair', 'hvac company', 'ac repair near me', 'air conditioning installation', 'emergency ac repair'];
 
-if (!APP_PASSWORD) {
-  console.error('APP_PASSWORD is not set. Set it so only you can open the scanner.');
-  process.exit(1);
-}
-if (!DEMO && (!DFS_LOGIN || !DFS_PASSWORD)) {
-  console.error('DATAFORSEO_LOGIN and DATAFORSEO_PASSWORD must be set (or set DEMO_MODE=true to try it with sample data).');
-  process.exit(1);
-}
+if (DEMO) console.warn('No DataForSEO credentials (or DEMO_MODE=true): running in DEMO MODE with sample data.');
 fs.mkdirSync(SCAN_DIR, { recursive: true });
+
+// Without a password, never expose the app: show setup instructions instead.
+if (!APP_PASSWORD) {
+  console.error('APP_PASSWORD is not set. Showing setup page until it is.');
+  const setup = express();
+  setup.get('/healthz', (req, res) => res.json({ ok: true, setup: true }));
+  setup.use((req, res) =>
+    res.status(503).type('html').send(`<!doctype html><meta name="viewport" content="width=device-width,initial-scale=1">
+      <title>Grid Scanner setup</title><body style="font:16px system-ui;max-width:560px;margin:60px auto;padding:0 16px;line-height:1.5">
+      <h1>Almost there</h1><p>Set a password before using Grid Scanner.</p>
+      <ol><li>In Render, open the <b>grid-scanner</b> service and click <b>Environment</b>.</li>
+      <li>Add <code>APP_PASSWORD</code> with any password you choose.</li>
+      <li>Click <b>Save, rebuild, and deploy</b>. This page will turn into the sign-in screen.</li></ol></body>`)
+  );
+  setup.listen(PORT, () => console.log(`Setup page on port ${PORT}`));
+  return;
+}
 
 const SECRET = process.env.SESSION_SECRET || crypto.createHash('sha256').update('grid-scanner:' + APP_PASSWORD).digest('hex');
 const SESSION_TOKEN = crypto.createHmac('sha256', SECRET).update('session-v1').digest('hex');
