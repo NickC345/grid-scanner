@@ -3,10 +3,10 @@
 Type in a local business name and address. The scanner:
 
 1. **Finds the business on Google Maps** and lets you confirm the right listing.
-2. **Runs a 9 × 11 grid (99 points)** around the business and records where it ranks on Google Maps for each keyword. Choose 0.5, 1 or 2 miles between points.
+2. **Runs a 9 × 11 grid (99 points)** around the business and records where it ranks on Google Maps. It defaults to one keyword to keep the cost low. Choose 0.5, 1 or 2 miles between points.
 3. **Checks whether it is spending on ads:**
    - sponsored Google Maps pins at every grid point;
-   - Google Search ads and Local Services Ads at a 3 × 3 sample of points;
+   - optionally, live Google Search ads and Local Services Ads at a 3 × 3 sample of points;
    - ad history from Google's Ads Transparency Center;
    - estimated monthly ad spend and the keywords it bids on (DataForSEO Labs).
 4. **Scores likely wasted spend:**
@@ -21,18 +21,35 @@ Type in a local business name and address. The scanner:
    - reviews and trust signals;
    - schema markup and tracking tags.
 
-Every scan is saved under **Past scans**.
+Every scan is saved under **Past scans**. Companies you want to pursue go into the **Pipeline**, and the ones you win move to **Clients**.
+
+## Pipeline and clients
+
+- **Save to pipeline:** press the button on any scan result. The company becomes a card with its mini heatmap, rank, ad and website scores.
+- **Board:** New lead, Contacted, Responded, Follow up, Call scheduled, Client and Not interested. Drag cards between columns. On a phone, use the "Move to" menu on each card.
+- **Call scheduled:** dropping a card here asks for the call date and time. The column is sorted by the soonest call, and past calls turn red.
+- **Card details:** contact name, email, phone, notes and an activity log. Every stage change is logged.
+- **Rescans:** a new scan of a saved company joins its history automatically.
+- **Clients:** a card moved to Client gets a workspace with its baseline scan, starter checklists (onboarding, website redesign, Google Ads, local SEO), monthly fee, and a before and after comparison after each rescan. Starter tasks live in `lib/templates.js`; each client's list can be edited in the app.
+- **Backup:** "Download backup" on the Pipeline page saves everything (companies, notes, checklists and scans) to one file. "Restore backup" merges it back.
+
+### Where saved data lives
+
+Saved companies are stored in `DATA_DIR` (default `./data`). On a host with a persistent disk, point `DATA_DIR` at the disk (for example `/var/data` on Render). Without a persistent disk the data is erased whenever the app restarts or updates, and the Pipeline page shows a warning.
 
 ## What it costs to run
 
-The tool uses DataForSEO's pay-as-you-go API. Typical cost per scan:
+The tool uses DataForSEO's pay-as-you-go API. The scan screen shows an estimate before each scan, and the real cost after.
 
-| Scan | Approx. cost |
+| Scan | Estimated cost |
 |---|---|
-| 1 keyword, 99 points + ad checks + spend lookup | ~$0.24 |
-| 5 keywords (default) | ~$1.12 |
+| 1 keyword, Economy speed, with the ad-spend lookup (default) | about $0.08 |
+| 1 keyword, Fast speed | about $0.22 |
+| Each extra keyword, Economy | about $0.06 |
+| Live Search-ad check (optional) | about $0.02 per keyword |
 
-The app shows an estimate before each scan and the actual cost after.
+- **Economy** sends the map searches in DataForSEO's queue at normal priority. Results are the same, and a scan takes a few minutes. **Fast** uses live searches, which finish in under a minute.
+- The estimate uses list prices from memory. The cost shown after each scan comes from DataForSEO's own responses and is the number to trust.
 
 ## Try it locally with sample data
 
@@ -95,8 +112,10 @@ lib/grid.js         9x11 grid math
 lib/dataforseo.js   DataForSEO API client
 lib/scan.js         Scan orchestration
 lib/analysis.js     Rank stats, spend verdict, waste score
+lib/store.js        Saved companies, pipeline stages, client workspaces
+lib/templates.js    Starter client checklists
 lib/audit.js        Website + PageSpeed audit
 lib/demo.js         Sample-data client for demo mode
-public/             Web UI (Leaflet map)
+public/             Web UI (scanner, pipeline board, clients; Leaflet map)
 test/               node --test suite
 ```

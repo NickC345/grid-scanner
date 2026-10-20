@@ -12,6 +12,11 @@
 <body>
 <header class="topbar">
   <div class="brand"><div class="brand-mark" aria-hidden="true"><i></i><i></i><i></i><i></i><i></i><i></i><i></i><i></i><i></i></div><h1>Grid Scanner</h1></div>
+  <nav class="nav" id="nav" aria-label="Sections">
+    <button type="button" data-view="scan" aria-current="page">Scan</button>
+    <button type="button" data-view="pipeline">Pipeline <span class="count" id="pipeCount" hidden></span></button>
+    <button type="button" data-view="clients">Clients <span class="count" id="clientCount" hidden></span></button>
+  </nav>
   <div class="top-actions">
     <button class="btn ghost" id="historyBtn" type="button">Past scans</button>
     <form method="post" action="/logout"><button class="btn ghost" type="submit">Sign out</button></form>
@@ -19,7 +24,7 @@
 </header>
 <div class="demo-banner" id="demoBanner" hidden>Demo mode: every result below is made-up sample data. Add your DataForSEO login to run real scans.</div>
 
-<main class="layout">
+<main class="layout" id="scanView">
   <aside class="rail">
     <section class="panel step" id="step1">
       <div class="step-head"><span class="step-num">01</span><h3>Find the business</h3></div>
@@ -35,8 +40,9 @@
     <section class="panel step" id="step2" hidden>
       <div class="step-head"><span class="step-num">02</span><h3>Scan settings</h3></div>
       <div class="field">
-        <label for="keywords">Keywords (one per line)</label>
-        <textarea id="keywords" spellcheck="false"></textarea>
+        <label for="keywords">Keyword</label>
+        <textarea id="keywords" spellcheck="false" rows="2"></textarea>
+        <span class="small muted">One keyword keeps the cost lowest. Add more on separate lines.</span>
       </div>
       <div class="field">
         <label for="spacing">Distance between grid points</label>
@@ -50,7 +56,14 @@
         <label for="website">Website (optional override)</label>
         <input id="website" type="url" placeholder="Uses the site on their Google profile">
       </div>
-      <label class="check"><input type="checkbox" id="optAds" checked><span>Check Google Search ads and Local Services Ads at 9 points per keyword</span></label>
+      <div class="field">
+        <label for="mode">Speed</label>
+        <select id="mode">
+          <option value="economy" selected>Economy: cheaper, takes a few minutes</option>
+          <option value="fast">Fast: about 3× the map cost, under a minute</option>
+        </select>
+      </div>
+      <label class="check"><input type="checkbox" id="optAds"><span>Also check live Google Search ads and Local Services Ads (about 2¢ per keyword)</span></label>
       <label class="check"><input type="checkbox" id="optSpend" checked><span>Look up ad history and estimated monthly spend</span></label>
       <div class="cost-line"><span>Estimated DataForSEO cost</span><strong class="num" id="costEst">$0.00</strong></div>
       <button class="btn primary block" id="scanBtn" type="button">Run 9 × 11 scan</button>
@@ -80,6 +93,12 @@
   </section>
 </main>
 
+<main class="page" id="pipelineView" hidden></main>
+<main class="page" id="clientsView" hidden></main>
+
+<dialog id="leadDialog" class="dialog" aria-label="Company details"></dialog>
+<dialog id="callDialog" class="dialog small-dialog" aria-label="Call date and time"></dialog>
+
 <template id="resultTpl">
   <div class="panel">
     <div class="biz-head">
@@ -88,7 +107,10 @@
         <h2 data-k="title"></h2>
         <div class="biz-meta" data-k="meta"></div>
       </div>
-      <div class="small muted num" data-k="cost"></div>
+      <div class="biz-side">
+        <div data-k="leadBox"></div>
+        <div class="small muted num" data-k="cost"></div>
+      </div>
     </div>
   </div>
   <div class="tiles" data-k="tiles"></div>
@@ -143,5 +165,6 @@
 
 <script src="/vendor/leaflet/leaflet.js"></script>
 <script src="/app.js"></script>
+<script src="/crm.js"></script>
 </body>
 </html>

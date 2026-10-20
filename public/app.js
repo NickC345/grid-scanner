@@ -4,7 +4,7 @@
     String(v ?? '').replace(/[&<>"']/g, (c) => ({ '&': '&amp;', '<': '&lt;', '>': '&gt;', '"': '&quot;', "'": '&#39;' })[c]);
   const money = (n) => (n == null ? '—' : '$' + Math.round(n).toLocaleString());
 
-  let config = { defaultKeywords: [], costPerKeyword: 0.22, costFixed: 0.02 };
+  let config = { defaultKeywords: [], prices: { mapsLive: 0.002, mapsQueued: 0.0006, organicLive: 0.002, labsOverview: 0.0101, labsRanked: 0.0111, adsSearch: 0.002 } };
   let candidates = [];
   let current = null;
   let map = null;
@@ -39,14 +39,15 @@
 
   function updateCost() {
     const n = keywords().length;
-    const ads = $('#optAds').checked;
-    const perKw = ads ? config.costPerKeyword : config.costPerKeyword - 9 * 0.002;
-    const est = n * perKw + ($('#optSpend').checked ? config.costFixed : 0);
+    const pr = config.prices;
+    let est = n * 99 * ($('#mode').value === 'fast' ? pr.mapsLive : pr.mapsQueued);
+    if ($('#optAds').checked) est += n * 9 * pr.organicLive;
+    if ($('#optSpend').checked) est += pr.labsOverview + pr.labsRanked + pr.adsSearch;
     $('#costEst').textContent = '≈ $' + est.toFixed(2);
     $('#scanBtn').textContent = `Run 9 × 11 scan (${n} keyword${n === 1 ? '' : 's'})`;
     $('#scanBtn').disabled = n === 0;
   }
-  ['#keywords', '#optAds', '#optSpend'].forEach((s) => $(s).addEventListener('input', updateCost));
+  ['#keywords', '#optAds', '#optSpend', '#mode'].forEach((s) => $(s).addEventListener('input', updateCost));
 
   // ---- step 1: locate ----
   $('#locateForm').addEventListener('submit', async (e) => {
@@ -99,6 +100,7 @@
           website: $('#website').value.trim(),
           searchAds: $('#optAds').checked,
           spend: $('#optSpend').checked,
+          mode: $('#mode').value,
         }),
       });
       poll(id);
@@ -123,6 +125,7 @@
         panel.hidden = true;
         $('#scanBtn').disabled = false;
         history.replaceState(null, '', '#' + id);
+        if (window.GS.refreshLeads) await window.GS.refreshLeads();
         return render(r.result);
       }
       if (r.status === 'error') {
@@ -153,6 +156,7 @@
   function render(s) {
     current = s;
     activeKw = 0;
+    window.GS.showView('scan', { keepHash: true });
     $('#historyView').hidden = true;
     const root = $('#results');
     root.hidden = false;
@@ -175,6 +179,7 @@
       .map((x) => `<span>${x}</span>`)
       .join('');
     k('cost').textContent = `API cost $${(s.cost || 0).toFixed(3)} · ${s.calls} calls`;
+    if (window.GS.attachSaveButton) window.GS.attachSaveButton(k('leadBox'), s);
 
     // tiles
     const avgArp = s.keywords.reduce((a, x) => a + (x.stats.avgRank ?? 21), 0) / s.keywords.length;
@@ -436,10 +441,19 @@
     $('#results').hidden = false;
   });
 
-  // open a scan from the URL hash
-  if (location.hash.length > 1) {
-    api('/api/scan/' + location.hash.slice(1))
-      .then((r) => r.status === 'done' && render(r.result))
-      .catch(() => {});
-  }
+  // Shared with crm.js (pipeline and clients).
+  window.GS = Object.assign(window.GS || {}, {
+    $, esc, money, api, showErr,
+    watchScan: (id) => {
+      window.GS.showView('scan');
+      poll(id);
+    },
+    openScan: async (id) => {
+      const r = await api('/api/scan/' + id);
+      if (r.result) {
+        history.replaceState(null, '', '#' + id);
+        render(r.result);
+      }
+    },
+  });
 })();
