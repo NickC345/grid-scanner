@@ -214,7 +214,8 @@
     if (s.errorCount) {
       k('errors').innerHTML = `<div class="notice">${s.errorCount} search(es) failed and were left out. First: ${esc(s.errors[0])}</div>`;
     }
-    root.scrollIntoView({ behavior: 'smooth', block: 'start' });
+    root.scrollTop = 0; // desktop: the results pane scrolls on its own
+    if (matchMedia('(max-width: 900px)').matches) root.scrollIntoView({ behavior: 'smooth', block: 'start' });
   }
 
   function tile(label, big, sub, t) {

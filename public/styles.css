@@ -315,3 +315,13 @@ td.num, th.num { text-align: right; }
 
 .toast { position: fixed; left: 50%; bottom: calc(20px + env(safe-area-inset-bottom, 0px)); transform: translate(-50%, 20px); background: var(--ink); color: var(--bg); padding: 10px 16px; border-radius: var(--r); max-width: calc(100vw - 32px); opacity: 0; pointer-events: none; transition: opacity 0.2s, transform 0.2s; z-index: 50; }
 .toast.show { opacity: 1; transform: translate(-50%, 0); }
+
+/* ---- scan page: two independent scroll areas on desktop ---- */
+@media (min-width: 901px) {
+  body:has(#scanView:not([hidden])) { height: 100vh; height: 100dvh; display: flex; flex-direction: column; overflow: hidden; }
+  body:has(#scanView:not([hidden])) .topbar, body:has(#scanView:not([hidden])) .demo-banner { flex: none; }
+  #scanView { flex: 1; min-height: 0; width: 100%; box-sizing: border-box; align-items: stretch; grid-template-rows: minmax(0, 1fr); padding-top: 16px; padding-bottom: 0; overflow: hidden; }
+  #scanView .rail { position: static; top: auto; height: 100%; min-height: 0; overflow-y: auto; overscroll-behavior: contain; padding: 0 6px 28px 0; scrollbar-gutter: stable; }
+  #scanView .results { height: 100%; min-height: 0; overflow-y: auto; overscroll-behavior: contain; padding: 0 6px 40px 0; scrollbar-gutter: stable; }
+  #scanView .rail > .panel, #scanView .rail > section { flex: none; }
+}
