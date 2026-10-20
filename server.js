@@ -248,7 +248,7 @@ app.post('/api/scan', route((req, res) => {
   const business = cleanBusiness(req.body.business || {});
   const keywords = [...new Set((req.body.keywords || []).map((k) => String(k).trim().toLowerCase().slice(0, 80)).filter(Boolean))].slice(0, 10);
   if (!keywords.length) throw httpError(400, 'Add at least one keyword.');
-  const spacing = [0.5, 1, 2].includes(Number(req.body.spacing)) ? Number(req.body.spacing) : 1;
+  const spacing = [0.5, 1, 2, 3, 5].includes(Number(req.body.spacing)) ? Number(req.body.spacing) : 2;
   const id = startScan({
     business,
     keywords,
@@ -339,7 +339,7 @@ app.post('/api/leads/:id/rescan', route((req, res) => {
   const id = startScan({
     business: cleanBusiness({ ...lead.business, is_claimed: null }),
     keywords: input.keywords && input.keywords.length ? input.keywords : DEFAULT_KEYWORDS,
-    spacing: input.spacing || 1,
+    spacing: input.spacing || 2,
     website: input.website || null,
     searchAds: input.searchAds === true,
     spend: input.spend !== false,

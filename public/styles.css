@@ -325,3 +325,8 @@ td.num, th.num { text-align: right; }
   #scanView .results { height: 100%; min-height: 0; overflow-y: auto; overscroll-behavior: contain; padding: 0 6px 40px 0; scrollbar-gutter: stable; }
   #scanView .rail > .panel, #scanView .rail > section { flex: none; }
 }
+
+/* phones: a map shaped like the 9 x 11 grid, so the grid fills it */
+@media (max-width: 700px) {
+  #map { height: auto; max-height: none; aspect-ratio: 9 / 11.5; }
+}

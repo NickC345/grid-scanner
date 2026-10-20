@@ -3,7 +3,7 @@
 Type in a local business name and address. The scanner:
 
 1. **Finds the business on Google Maps** and lets you confirm the right listing.
-2. **Runs a 9 × 11 grid (99 points)** around the business and records where it ranks on Google Maps. It defaults to one keyword to keep the cost low. Choose 0.5, 1 or 2 miles between points.
+2. **Runs a 9 × 11 grid (99 points)** around the business and records where it ranks on Google Maps. It defaults to one keyword to keep the cost low. Choose 1, 2, 3 or 5 miles between points (2 is the default).
 3. **Checks whether it is spending on ads:**
    - sponsored Google Maps pins at every grid point;
    - optionally, live Google Search ads and Local Services Ads at a 3 × 3 sample of points;

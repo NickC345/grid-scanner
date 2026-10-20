@@ -228,13 +228,16 @@
       map = null;
     }
     const dark = matchMedia('(prefers-color-scheme: dark)').matches && document.documentElement.dataset.theme !== 'light';
-    map = L.map('map', { scrollWheelZoom: false });
+    map = L.map('map', { scrollWheelZoom: false, zoomSnap: 0.25, zoomControl: false });
+    L.control.zoom({ position: 'bottomright' }).addTo(map);
     L.tileLayer(`https://{s}.basemaps.cartocdn.com/${dark ? 'dark_all' : 'light_all'}/{z}/{x}/{y}{r}.png`, {
       attribution: '&copy; OpenStreetMap contributors &copy; CARTO',
       maxZoom: 19,
     }).addTo(map);
     const pts = current.grid.points;
     map.fitBounds(L.latLngBounds(pts.map((p) => [p.lat, p.lng])).pad(0.06));
+    // Pins resize with the map, so they never crowd each other on a phone or when zoomed out.
+    map.on('zoomend resize', () => lastK && drawKeyword(lastK));
     L.marker([current.business.lat, current.business.lng], {
       icon: L.divIcon({ className: '', html: '<div style="width:12px;height:12px;background:var(--ink);transform:rotate(45deg);border:2px solid var(--panel)"></div>', iconSize: [12, 12] }),
       zIndexOffset: -100,
@@ -243,19 +246,32 @@
       .bindTooltip('Business location');
   }
 
+  let lastK = null;
+
+  // Pin size from the on-screen distance between neighbouring grid points.
+  function pinSize() {
+    const pts = current.grid.points;
+    const at = (p) => map.latLngToContainerPoint([p.lat, p.lng]);
+    const a = at(pts[0]);
+    const gap = Math.min(Math.abs(at(pts[1]).x - a.x), Math.abs(at(pts[current.grid.cols]).y - a.y));
+    return Math.max(14, Math.min(30, Math.round(gap * 0.8)));
+  }
+
   function drawKeyword(k) {
+    lastK = k;
     const kw = current.keywords[activeKw];
     const pts = current.grid.points;
+    const size = pinSize();
     if (gridLayer) gridLayer.remove();
     gridLayer = L.layerGroup().addTo(map);
     kw.cells.forEach((c) => {
       const p = pts.find((x) => x.row === c.row && x.col === c.col);
       const cls = c.error ? 'err' : rankClass(c.rank);
       const label = c.error ? '!' : c.rank == null ? '20+' : c.rank;
-      const html = `<div class="pin ${cls}${c.targetMapsAd ? ' ad' : ''}${p.isCenter ? ' center' : ''}">${label}</div>`;
+      const html = `<div class="pin ${cls}${c.targetMapsAd ? ' ad' : ''}${p.isCenter ? ' center' : ''}" style="width:${size}px;height:${size}px;font-size:${Math.max(8, Math.round(size * 0.4))}px">${label}</div>`;
       const top = (c.top || []).slice(0, 3).map((t) => `${t.rank}. ${esc(t.title)}${t.rating ? ` (${t.rating}★ ${t.reviews ?? ''})` : ''}`).join('<br>');
       const ads = (c.mapsAds || []).map((a) => esc(a.title)).join(', ');
-      L.marker([p.lat, p.lng], { icon: L.divIcon({ className: '', html, iconSize: [30, 30], iconAnchor: [15, 15] }) })
+      L.marker([p.lat, p.lng], { icon: L.divIcon({ className: '', html, iconSize: [size, size], iconAnchor: [size / 2, size / 2] }) })
         .addTo(gridLayer)
         .bindTooltip(
           `<strong>${c.error ? 'Search failed' : c.rank == null ? 'Not in top 20' : 'Rank #' + c.rank}</strong><br>${top}${ads ? `<br><em>Sponsored here: ${ads}</em>` : ''}`,
